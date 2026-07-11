@@ -317,6 +317,8 @@ export default function VenueDetailPage() {
     checkDate.setHours(0, 0, 0, 0);
     
     if (checkDate < today) return false;
+    // For daily-priced venues, today is not bookable since the day has already started
+    if (venue?.pricingUnit === 'day' && checkDate.getTime() === today.getTime()) return false;
     if (isDateFullyBooked(checkDate)) return false;
 
     // Check if date is blocked
@@ -397,6 +399,13 @@ export default function VenueDetailPage() {
     const todayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     if (val < todayStr) {
       toast.error('Cannot book a date in the past');
+      setBookingDate('');
+      return;
+    }
+
+    // For daily-priced venues, today is not bookable since the day has already started
+    if (venue?.pricingUnit === 'day' && val === todayStr) {
+      toast.error('Same-day booking is not available for daily-priced venues. Please select a future date.');
       setBookingDate('');
       return;
     }
@@ -503,6 +512,11 @@ export default function VenueDetailPage() {
 
     if (bookingDate < todayStr) {
       return toast.error('Cannot book a slot in the past');
+    }
+
+    // For daily-priced venues, today is not bookable
+    if (venue?.pricingUnit === 'day' && bookingDate === todayStr) {
+      return toast.error('Same-day booking is not available for daily-priced venues. Please select a future date.');
     }
 
     if (bookingDate === todayStr && venue?.pricingUnit !== 'day') {
