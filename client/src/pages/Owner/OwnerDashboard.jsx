@@ -1043,51 +1043,95 @@ export default function OwnerDashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
               
               {/* Left Column: List of Blocked Dates */}
-              <div className="lg:col-span-2 flex flex-col gap-4">
-                <h3 className="text-lg font-bold text-slate-900 mb-2">Active Date Closures</h3>
-                
-                {loadingBlockedDates ? (
-                  <div className="bg-white border border-slate-100 p-8 rounded-2xl text-center text-slate-400 text-xs italic">
-                    ⏳ Loading blocked dates list...
-                  </div>
-                ) : allBlockedDates.length === 0 ? (
-                  <div className="bg-white border border-slate-100 p-10 rounded-2xl text-center shadow-sm">
-                    <span className="text-4xl mb-3 block">📅</span>
-                    <h4 className="font-bold text-slate-950 text-sm mb-1">No blocked dates scheduled</h4>
-                    <p className="text-xs text-slate-500 max-w-xs mx-auto">All of your listed spaces are currently open and operational for client bookings!</p>
-                  </div>
-                ) : (
-                  <div className="flex flex-col gap-3">
-                    {allBlockedDates.map((bd) => (
-                      <div key={bd.id} className="bg-white border border-slate-100 rounded-2xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm animate-in fade-in-50 duration-200">
-                        <div className="flex items-center gap-4">
-                          <div className="h-12 w-12 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-500 font-bold shrink-0">
-                            <MdBlock className="text-lg" />
+              <div className="lg:col-span-2 flex flex-col gap-6">
+                {/* Active (today or future) blocked dates */}
+                <div className="flex flex-col gap-4">
+                  <h3 className="text-lg font-bold text-slate-900 mb-2">Active Date Closures</h3>
+                  
+                  {loadingBlockedDates ? (
+                    <div className="bg-white border border-slate-100 p-8 rounded-2xl text-center text-slate-400 text-xs italic">
+                      ⏳ Loading blocked dates list...
+                    </div>
+                  ) : (() => {
+                    const todayStr = new Date().toISOString().split('T')[0];
+                    const activeBlockedDates = allBlockedDates.filter(bd => bd.blockedDate >= todayStr);
+                    const expiredBlockedDates = allBlockedDates.filter(bd => bd.blockedDate < todayStr);
+
+                    return (
+                      <>
+                        {activeBlockedDates.length === 0 ? (
+                          <div className="bg-white border border-slate-100 p-10 rounded-2xl text-center shadow-sm">
+                            <span className="text-4xl mb-3 block">📅</span>
+                            <h4 className="font-bold text-slate-950 text-sm mb-1">No active blocked dates</h4>
+                            <p className="text-xs text-slate-500 max-w-xs mx-auto">All of your listed spaces are currently open and operational for client bookings!</p>
                           </div>
-                          <div>
-                            <span className="px-2 py-0.5 rounded bg-rose-50 border border-rose-100 text-rose-600 text-[10px] font-bold uppercase tracking-wider block w-fit mb-1.5">
-                              Blocked
-                            </span>
-                            <h4 className="font-black text-slate-900 text-sm leading-tight mb-1">{bd.venue?.venueName}</h4>
-                            <p className="text-xs text-slate-500">Reason: <span className="font-semibold text-slate-700">{bd.reason || 'No reason'}</span></p>
+                        ) : (
+                          <div className="flex flex-col gap-3">
+                            {activeBlockedDates.map((bd) => (
+                              <div key={bd.id} className="bg-white border border-slate-100 rounded-2xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm animate-in fade-in-50 duration-200">
+                                <div className="flex items-center gap-4">
+                                  <div className="h-12 w-12 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-500 font-bold shrink-0">
+                                    <MdBlock className="text-lg" />
+                                  </div>
+                                  <div>
+                                    <span className="px-2 py-0.5 rounded bg-rose-50 border border-rose-100 text-rose-600 text-[10px] font-bold uppercase tracking-wider block w-fit mb-1.5">
+                                      Blocked
+                                    </span>
+                                    <h4 className="font-black text-slate-900 text-sm leading-tight mb-1">{bd.venue?.venueName}</h4>
+                                    <p className="text-xs text-slate-500">Reason: <span className="font-semibold text-slate-700">{bd.reason || 'No reason'}</span></p>
+                                  </div>
+                                </div>
+                                <div className="flex sm:flex-col items-end justify-between sm:justify-start w-full sm:w-auto pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-50 gap-2">
+                                  <div className="text-right">
+                                    <span className="text-xs font-black text-slate-950 block">{bd.blockedDate}</span>
+                                    <span className="text-[10px] text-slate-400">Blocked Date</span>
+                                  </div>
+                                  <button
+                                    onClick={() => handleUnblockClick(bd)}
+                                    className="py-1.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200/60 font-bold text-[10px] rounded-lg transition-colors cursor-pointer"
+                                  >
+                                    Unblock
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
                           </div>
-                        </div>
-                        <div className="flex sm:flex-col items-end justify-between sm:justify-start w-full sm:w-auto pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-50 gap-2">
-                          <div className="text-right">
-                            <span className="text-xs font-black text-slate-950 block">{bd.blockedDate}</span>
-                            <span className="text-[10px] text-slate-400">Blocked Date</span>
+                        )}
+
+                        {/* Expired (past) blocked dates */}
+                        {expiredBlockedDates.length > 0 && (
+                          <div className="flex flex-col gap-3 mt-4">
+                            <h3 className="text-base font-bold text-slate-500 mb-1 flex items-center gap-2">
+                              <span className="text-slate-400">🕓</span> Expired Closures
+                              <span className="text-[10px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{expiredBlockedDates.length}</span>
+                            </h3>
+                            <p className="text-[11px] text-slate-400 -mt-2 mb-1">These dates have already passed. You can remove them to keep your list clean.</p>
+                            {expiredBlockedDates.map((bd) => (
+                              <div key={bd.id} className="bg-slate-50/70 border border-slate-100 rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 opacity-75 hover:opacity-100 transition-opacity">
+                                <div className="flex items-center gap-3">
+                                  <div className="h-10 w-10 rounded-xl bg-slate-100 border border-slate-200/60 flex items-center justify-center text-slate-400 font-bold shrink-0">
+                                    <MdBlock className="text-base" />
+                                  </div>
+                                  <div>
+                                    <span className="px-2 py-0.5 rounded bg-slate-100 border border-slate-200/60 text-slate-500 text-[10px] font-bold uppercase tracking-wider block w-fit mb-1">
+                                      Expired
+                                    </span>
+                                    <h4 className="font-bold text-slate-600 text-sm leading-tight">{bd.venue?.venueName}</h4>
+                                    <p className="text-[11px] text-slate-400">Reason: <span className="font-semibold text-slate-500">{bd.reason || 'No reason'}</span></p>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <span className="text-xs font-bold text-slate-500 block">{bd.blockedDate}</span>
+                                  <span className="text-[10px] text-slate-400">Past Date</span>
+                                </div>
+                              </div>
+                            ))}
                           </div>
-                          <button
-                            onClick={() => handleUnblockClick(bd)}
-                            className="py-1.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200/60 font-bold text-[10px] rounded-lg transition-colors cursor-pointer"
-                          >
-                            Unblock
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                        )}
+                      </>
+                    );
+                  })()}
+                </div>
               </div>
 
               {/* Right Column: Blocker Panel Form */}
