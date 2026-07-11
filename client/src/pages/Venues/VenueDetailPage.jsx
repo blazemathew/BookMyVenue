@@ -797,7 +797,7 @@ export default function VenueDetailPage() {
             <h1 className="text-3xl font-black text-white tracking-tight">{venue.venueName}</h1>
             <p className="text-slate-200 text-xs mt-1 flex flex-wrap items-center gap-1.5">
               <span>📍 {venue.address}</span>
-              {userLoc && venue.latitude && venue.longitude && (
+              {userLoc && venue.latitude && venue.longitude && !(user && venue.ownerId === user.id) && (
                 <span className="bg-primary/30 text-white border border-white/20 text-[10px] font-bold px-2.5 py-0.5 rounded-full backdrop-blur-md shadow-sm">
                   📍 {calculateDistance(userLoc.lat, userLoc.lng, Number(venue.latitude), Number(venue.longitude)).toFixed(1)} km away from {userLoc.name}
                 </span>
@@ -824,10 +824,10 @@ export default function VenueDetailPage() {
           )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className={`grid grid-cols-1 ${user && venue.ownerId === user.id ? '' : 'lg:grid-cols-3'} gap-8`}>
           
           {/* Main Info Column */}
-          <div className="lg:col-span-2 flex flex-col gap-6">
+          <div className={`${user && venue.ownerId === user.id ? '' : 'lg:col-span-2'} flex flex-col gap-6`}>
             
             {/* Highlights Grid */}
             <div className="grid grid-cols-3 gap-4">
@@ -1006,6 +1006,7 @@ export default function VenueDetailPage() {
           </div>
 
           {/* Booking Widget column */}
+          {!(user && venue.ownerId === user.id) && (
           <div className="w-full">
             <div className="matte-card p-6 sticky top-28 shadow-lg bg-white border border-slate-200">
               <h2 className="text-base font-bold text-slate-900 mb-4">Book this Venue</h2>
@@ -1436,6 +1437,7 @@ export default function VenueDetailPage() {
 
             </div>
           </div>
+          )}
 
         </div>
       </div>
